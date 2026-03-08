@@ -11,6 +11,28 @@
         }
         h2 { margin: 0; font-weight: 400; letter-spacing: 1px; color: #4da6ff; }
         p { color: #ccc; font-size: 0.9em; margin-top: 5px; }
+        
+        /* Estilos para el botón y panel de medidas */
+        #btnMedidas {
+            position: absolute; bottom: 25px; right: 25px; z-index: 100;
+            padding: 12px 24px; font-size: 15px; font-weight: bold;
+            background-color: #4da6ff; color: #111; border: none;
+            border-radius: 6px; cursor: pointer; box-shadow: 0 4px 8px rgba(0,0,0,0.4);
+            transition: background 0.3s, transform 0.1s;
+        }
+        #btnMedidas:hover { background-color: #3388dd; }
+        #btnMedidas:active { transform: scale(0.95); }
+        
+        #panelMedidas {
+            position: absolute; bottom: 80px; right: 25px; z-index: 100;
+            background-color: rgba(26, 26, 26, 0.95); border: 2px solid #4da6ff;
+            border-radius: 8px; padding: 20px; width: 280px; color: #fff;
+            display: none; /* Oculto por defecto */
+            box-shadow: 0 8px 16px rgba(0,0,0,0.6); backdrop-filter: blur(4px);
+        }
+        #panelMedidas h3 { margin-top: 0; color: #fca311; font-size: 18px; margin-bottom: 15px; border-bottom: 1px solid #444; padding-bottom: 10px;}
+        #panelMedidas ul { margin: 0; padding-left: 20px; font-size: 14px; line-height: 1.8; color: #ddd; }
+        #panelMedidas b { color: #4da6ff; }
     </style>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
@@ -22,7 +44,38 @@
         <p>Monitor ajustado a escala real. Haz clic en los cajones para abrirlos. Arrastra para girar.</p>
     </div>
 
+    <button id="btnMedidas">Ver Medidas</button>
+    <div id="panelMedidas">
+        <h3>Medidas de Fabricación</h3>
+        <ul>
+            <li><b>Mesa Principal:</b> 250 cm x 75 cm</li>
+            <li><b>Mesa Lateral (L):</b> 145 cm x 75 cm</li>
+            <li><b>Altura de Trabajo:</b> 75 cm a 80 cm</li>
+            <li><b>Estante Inferior:</b> A 15 cm del piso</li>
+            <li><b>Repisa Alzada:</b> 30 cm prof. x 45 cm alto</li>
+            <li><b>Cajoneras:</b> 65 cm x 50 cm</li>
+            <li><b>Caño Estructural:</b> 40x40 mm (1.6 mm)</li>
+        </ul>
+    </div>
+
     <script>
+        // --- LÓGICA DEL BOTÓN DE MEDIDAS ---
+        const btnMedidas = document.getElementById('btnMedidas');
+        const panelMedidas = document.getElementById('panelMedidas');
+
+        btnMedidas.addEventListener('click', () => {
+            if (panelMedidas.style.display === 'none' || panelMedidas.style.display === '') {
+                panelMedidas.style.display = 'block';
+                btnMedidas.innerText = 'Ocultar Medidas';
+                btnMedidas.style.backgroundColor = '#fca311'; // Cambia a naranja al abrir
+            } else {
+                panelMedidas.style.display = 'none';
+                btnMedidas.innerText = 'Ver Medidas';
+                btnMedidas.style.backgroundColor = '#4da6ff'; // Vuelve a azul
+            }
+        });
+
+        // --- INICIO CÓDIGO 3D ---
         const scene = new THREE.Scene();
         scene.fog = new THREE.FogExp2(0x1a1a1a, 0.015);
 
@@ -178,6 +231,9 @@
         });
 
         window.addEventListener('click', (event) => {
+            // Ignorar clics si el usuario está haciendo clic en el botón UI
+            if(event.target.id === 'btnMedidas') return;
+
             mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
             mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
             raycaster.setFromCamera(mouse, camera);
@@ -200,31 +256,18 @@
         aifen.position.set(11.0, 12.75, 4.0); aifen.rotation.y = -0.8; aifen.castShadow = true; scene.add(aifen);
 
 
-        // *** ZONA PC - MONITOR A ESCALA REAL ***
-        
-        // 1. Gabinete CPU
-        createBox(2.2, 5.0, 4.5, matPC, -11.0, 10.15, -1.0); 
-
-        // 2. Base del Monitor
-        createBox(1.8, 0.1, 1.2, matPC, -6.5, 7.7, -1.5); 
-        
-        // 3. Cuello del Monitor (Más corto)
-        createBox(0.3, 1.2, 0.2, matPC, -6.5, 8.3, -1.6); 
-        
-        // 4. Marco de la Pantalla (Más pequeño: 5.0 x 3.0)
-        createBox(5.0, 3.0, 0.3, matPC, -6.5, 9.8, -1.3); 
-        
-        // 5. Panel de luz (Pantalla azul)
-        createBox(4.8, 2.8, 0.31, matPantalla, -6.5, 9.8, -1.3); 
-
-        // 6. Teclado
-        createBox(4.0, 0.1, 1.2, matPC, -6.5, 7.7, 1.0); 
+        // --- ZONA PC ---
+        createBox(2.2, 5.0, 4.5, matPC, -11.0, 10.15, -1.0); // Gabinete CPU
+        createBox(1.8, 0.1, 1.2, matPC, -6.5, 7.7, -1.5); // Base Monitor
+        createBox(0.3, 1.2, 0.2, matPC, -6.5, 8.3, -1.6); // Cuello Monitor
+        createBox(5.0, 3.0, 0.3, matPC, -6.5, 9.8, -1.3); // Marco Pantalla
+        createBox(4.8, 2.8, 0.31, matPantalla, -6.5, 9.8, -1.3); // Pantalla
+        createBox(4.0, 0.1, 1.2, matPC, -6.5, 7.7, 1.0); // Teclado
 
         // --- ZONA DE SOLDADURA ---
-        // Tapete de silicona
-        createBox(6, 0.05, 4, matTapete, 2, 7.68, 1); 
+        createBox(6, 0.05, 4, matTapete, 2, 7.68, 1); // Tapete
 
-        // Microscopio Trinocular Básico
+        // Microscopio
         const microGrp = new THREE.Group();
         microGrp.position.set(2, 7.65, -0.5);
         scene.add(microGrp);
